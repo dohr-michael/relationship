@@ -1,0 +1,7 @@
+package: github.com/dohr-michael/relationship/services
+import:
+- package: github.com/sirupsen/logrus
+- package: github.com/spf13/cobra
+- package: github.com/spf13/viper
+- package: github.com/pressly/chi
+- package: github.com/asaskevich/govalidator
