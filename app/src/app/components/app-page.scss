@@ -1,0 +1,25 @@
+$topbar_height: 3rem;
+
+.app-page {
+  &__topbar {
+    &__title {
+      display: inline-flex;
+      flex-flow: column;
+    }
+    &.ui.fixed.menu {
+      height: $topbar_height;
+    }
+  }
+  &__body {
+    padding-top: $topbar_height;
+    height: 100vh;
+    &__sidebar {
+      &.ui.vertical.menu {
+        overflow-y: auto;
+      }
+    }
+    &__content {
+      overflow: auto;
+    }
+  }
+}

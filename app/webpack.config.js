@@ -5,9 +5,12 @@ const webpack              = require( 'webpack' ),
       ExtractTextPlugin    = require( "extract-text-webpack-plugin" ),
       BundleAnalyzerPlugin = require( 'webpack-bundle-analyzer' ).BundleAnalyzerPlugin,
       path                 = require( 'path' ),
-      pkg                  = require( './package.json' );
+      pkg                  = require( './package.json' ),
+      child                = require( 'child_process' );
 
 const target = process.env.npm_lifecycle_event ? process.env.npm_lifecycle_event : 'start';
+
+const version = child.execSync( 'git rev-parse --short HEAD' ).toString().replace( /\s/g, '' );
 
 const Paths = {
     root            : path.join( __dirname ),
@@ -51,8 +54,11 @@ if( target === 'start' ) {
 
 module.exports = {
     entry    : {
-        app: Paths.app,
+        app   : Paths.app,
         vendor: vendors
+    },
+    externals: {
+        'app-config': 'AppConfig'
     },
     output   : {
         path      : dist,
@@ -61,7 +67,7 @@ module.exports = {
     },
     devServer: {
         host              : 'localhost',
-        disableHostCheck : true,
+        disableHostCheck  : true,
         port              : pkg.config.devPort,
         historyApiFallback: true,
         hot               : true,
@@ -70,22 +76,22 @@ module.exports = {
         stats             : 'errors-only',
         proxy             : {
             '/api': {
-                target     : 'http://localhost:9000',
+                target     : 'http://localhost:8080',
                 pathRewrite: { '^/api': '' }
             },
         },
     },
     resolve  : {
-        extensions: [ '.ts', '.tsx', '.js', '.css', '.scss' ],
-        modules   : [ Paths.app, 'node_modules' ],
+        extensions : [ '.ts', '.tsx', '.js', '.css', '.scss' ],
+        modules    : [ Paths.app, 'node_modules' ],
         unsafeCache: true
     },
-    cache : true,
+    cache    : true,
     module   : {
         rules: [
             {
-                test: /\.tsx?$/,
-                use : { loader: 'ts-loader', options: { transpileOnly: true } },
+                test   : /\.tsx?$/,
+                use    : { loader: 'ts-loader', options: { transpileOnly: true } },
                 exclude: [ 'node_modules' ]
             },
             {
@@ -127,6 +133,7 @@ module.exports = {
             template  : path.resolve( Paths.app, 'index.html' ),
             title     : pkg.name,
             buildTime : CompileTime,
+            version   : version,
         } ),
         new ExtractTextPlugin( { filename: 'styles-[hash].css', allChunks: true } ),
         new copyWebpack( CopyStatics ),

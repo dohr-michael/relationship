@@ -5,3 +5,4 @@ import:
 - package: github.com/spf13/viper
 - package: github.com/pressly/chi
 - package: github.com/asaskevich/govalidator
+- package: gopkg.in/mgo.v2

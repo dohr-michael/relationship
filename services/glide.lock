@@ -1,5 +1,5 @@
-hash: 4f21bf775770fb02b090bd506d766f77a15d93a89c2a7ad5a25ce98da31f2d07
-updated: 2017-08-10T07:44:52.92532313+02:00
+hash: fa7753b16eb28e1bd1a4258c72bee1c6703861fe82f1ff9d89b3a47724785145
+updated: 2017-08-17T18:51:11.771060993+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
@@ -55,6 +55,8 @@ imports:
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
 - name: gopkg.in/yaml.v2
   version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
 testImports: []

@@ -11,6 +11,9 @@
     <% for (var css in htmlWebpackPlugin.files.css) { %>
     <!--link href="<%=htmlWebpackPlugin.files.css %>" rel="stylesheet"-->
     <% } %>
+    <script>
+        var AppConfig = { version: '<%=htmlWebpackPlugin.options.version%>' };
+    </script>
 </head>
 <body style="">
 <% if (htmlWebpackPlugin.options.unsupportedBrowser) { %>

@@ -1,0 +1,1 @@
+export { SchemaEditorProps, SchemaEditor } from './schema-editor';

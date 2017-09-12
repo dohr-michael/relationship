@@ -14,9 +14,13 @@ import 'whatwg-fetch';
 // Styles
 import './index.scss';
 // Config
-import { epics, reducers, States } from './core';
+import { i18n, RouteRenderer } from 'toolbox';
+import { epics } from './epics';
+import { reducers, Stores } from './reducers';
+import { AppPage } from './containers';
 
-import { Flag } from 'semantic-ui-react';
+// App
+import * as fr from 'i18n/fr-FR';
 
 
 // Create a history of your choosing (we're using a browser history in this case)
@@ -29,7 +33,7 @@ const middleware = routerMiddleware( history );
 // Add the reducer to your store on the `router` key
 // Also apply our middleware for navigating
 const store = createStore(
-    combineReducers<States>( {
+    combineReducers<Stores>( {
         ...reducers
     } ),
     composeWithDevTools(
@@ -42,26 +46,30 @@ const store = createStore(
 
 // Init Authentication.
 // store.dispatch( auth.actions.InitContext( 'ea00ba7e-1a25-4d08-9feb-b79ee34f1972', 'bcaa61da-9015-4cbe-9d92-ed22358357c7' ) );
-/*store.dispatch( i18n.Load( {
-    defaultLocale: 'en', data: {
-        messages: { en: en.messages }, formats: { en: en.formats }
-    }
-} ) );
-*/
+store.dispatch(
+    i18n.Load( {
+        defaultLocale: 'fr',
+        data:          {
+            messages: { fr: fr.messages },
+            formats:  { fr: fr.formats }
+        }
+    } )
+);
 
 
-const App = () => (
+const MyApp = () => (
     <Provider store={ store }>
-        <div>
-            <div>Salut !</div>
-            <Flag name="fr"/>
-        </div>
+        <i18n.I18nProvider>
+            <ConnectedRouter history={ history }>
+                <AppPage />
+            </ConnectedRouter>
+        </i18n.I18nProvider>
     </Provider>
 );
 
 export default function () {
     const app = document.getElementById( 'app' );
     if( app != null ) {
-        ReactDom.render( <App/>, app );
+        ReactDom.render( <MyApp/>, app );
     }
 }

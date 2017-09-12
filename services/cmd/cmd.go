@@ -14,6 +14,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"fmt"
+	"github.com/dohr-michael/relationship/services/router"
 )
 
 var cfgFile string
@@ -28,17 +29,18 @@ var RootCmd = &cobra.Command{
 	Short: "Serving relationship services.",
 	Long:  `Serving relationship services`,
 	Run: func(cmd *cobra.Command, args []string) {
-		router := chi.NewRouter()
-		router.Use(middleware.RequestID)
-		router.Use(middleware.Logger)
+		r := chi.NewRouter()
+		r.Use(middleware.RequestID)
+		r.Use(middleware.Logger)
 		// TODO Error handler
-		router.Route("/", func(r chi.Router) {
+		r.Route("/", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte(fmt.Sprintf("Version : %s", cfg.Version)))
 			})
 		})
+		router.InitRouter(r)
 
-		logCmd.Fatal(http.ListenAndServe(":"+cfg.GetPort(), router))
+		logCmd.Fatal(http.ListenAndServe(":"+cfg.GetPort(), r))
 	},
 }
 
