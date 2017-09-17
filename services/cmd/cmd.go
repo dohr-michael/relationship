@@ -15,6 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/dohr-michael/relationship/services/router"
+	"github.com/dohr-michael/relationship/services/tools"
 )
 
 var cfgFile string
@@ -32,7 +33,7 @@ var RootCmd = &cobra.Command{
 		r := chi.NewRouter()
 		r.Use(middleware.RequestID)
 		r.Use(middleware.Logger)
-		// TODO Error handler
+		r.Use(tools.ErrorHandler)
 		r.Route("/", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte(fmt.Sprintf("Version : %s", cfg.Version)))
