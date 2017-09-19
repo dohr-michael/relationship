@@ -3,7 +3,6 @@ package tools
 import (
 	"net/http"
 	"github.com/pressly/chi/middleware"
-	"dev.dohrm.com/git/rpg/portal/tools/errors"
 	"runtime/debug"
 	log "github.com/sirupsen/logrus"
 )
@@ -23,8 +22,8 @@ func ErrorHandler(next http.Handler) http.Handler {
 					debug.PrintStack()
 				}
 				switch err.(type) {
-				case errors.Error:
-					e := err.(errors.Error)
+				case Error:
+					e := err.(Error)
 					http.Error(w, e.Message, e.Code)
 				case error:
 					e := err.(error)
