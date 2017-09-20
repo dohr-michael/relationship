@@ -64,7 +64,11 @@ func InitConfig(fileConfig string) {
 // GetPort returns the port
 // default value is "8080"
 func GetPort() string {
-	return viper.GetString("services.port")
+	port := viper.GetString("services.port")
+	if port == "" {
+		return "27017"
+	}
+	return port
 }
 
 // GetLogLevel returns the log level.
@@ -73,6 +77,21 @@ func GetLogLevel() string {
 	return viper.GetString("services.log-level")
 }
 
+// GetMongoHost returns the mongo host
+// default value is "localhost"
+func GetMongoHost() string {
+	h := viper.GetString("mongo.host")
+	if h == "" {
+		return "localhost"
+	}
+	return h
+}
+
+// GetMongoPort returns the mongo port
+// default value is "27017"
+func GetMongoPort() string {
+	return viper.GetString("mongo.port")
+}
 
 
 func parseLogLevel(level string) log.Level {
