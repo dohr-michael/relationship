@@ -77,20 +77,24 @@ func GetLogLevel() string {
 	return viper.GetString("services.log-level")
 }
 
-// GetMongoHost returns the mongo host
-// default value is "localhost"
-func GetMongoHost() string {
-	h := viper.GetString("mongo.host")
+// GetMongoUrl returns the mongo host
+// default value is "localhost:27017"
+func GetMongoUrl() string {
+	h := viper.GetString("mongo.url")
 	if h == "" {
 		return "localhost"
 	}
 	return h
 }
 
-// GetMongoPort returns the mongo port
-// default value is "27017"
-func GetMongoPort() string {
-	return viper.GetString("mongo.port")
+// GetMongoUrl returns the mongo host
+// default value is "relationship"
+func GetMongoDatabase() string {
+	h := viper.GetString("mongo.database")
+	if h == "" {
+		return "relationship"
+	}
+	return h
 }
 
 

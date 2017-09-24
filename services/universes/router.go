@@ -4,7 +4,10 @@ import (
 	"github.com/pressly/chi"
 	"net/http"
 	"github.com/dohr-michael/relationship/services/tools"
+	"github.com/dohr-michael/relationship/services/tools/mongo"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var logCmd = log.WithFields(log.Fields{
@@ -21,15 +24,17 @@ func filter(w http.ResponseWriter, r *http.Request) {
 	body := tools.SearchRequest{}
 	tools.DecodeJson(&body, r)
 
-	tools.JsonResult(&tools.Paginate{
-		Length: 2,
-		Offset: 0,
-		Total:  2,
-		Items: &Universes{
-			Universe{"1", "Vampire : L.A. By Night"},
-			Universe{"2", "Star Wars : La Règle des deux"},
-		},
-	})(w, r)
+	mongo.Col("universes", func(col *mgo.Collection) {
+		items := Universes{}
+		// TODO Pagination.
+		mongo.ParseError(col.Find(bson.D{}).All(&items))
+		tools.JsonResult(&tools.Paginate{
+			Length: len(items),
+			Offset: 0,
+			Total: len(items),
+			Items: &items,
+		})(w, r)
+	})
 }
 
 func byId(w http.ResponseWriter, r *http.Request) {
