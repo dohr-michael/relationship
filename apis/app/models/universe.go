@@ -1,10 +1,10 @@
-package universes
+package models
 
 import (
-	"github.com/dohr-michael/relationship/services/tools/crud"
+	"github.com/dohr-michael/relationship/apis/tools/crud"
 	"encoding/json"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/dohr-michael/relationship/services/tools/models"
+	"github.com/dohr-michael/relationship/apis/tools/models"
 )
 
 type Universe struct {

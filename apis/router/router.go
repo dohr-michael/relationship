@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/pressly/chi"
 	log "github.com/sirupsen/logrus"
-	"github.com/dohr-michael/relationship/services/universes"
+	"github.com/dohr-michael/relationship/apis/app/services"
 )
 
 var logCmd = log.WithFields(log.Fields{
@@ -11,5 +11,5 @@ var logCmd = log.WithFields(log.Fields{
 })
 
 func InitRouter(router *chi.Mux) {
-	router.Route("/universes", universes.Router)
+	services.UniverseRouter("/universes", router)
 }

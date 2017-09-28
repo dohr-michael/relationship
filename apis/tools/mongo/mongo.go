@@ -3,8 +3,8 @@ package mongo
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/dohr-michael/relationship/services/tools"
-	"github.com/dohr-michael/relationship/services/cfg"
+	"github.com/dohr-michael/relationship/apis/tools"
+	"github.com/dohr-michael/relationship/apis/cfg"
 )
 
 var indexCol = "colIdx"

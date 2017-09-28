@@ -10,8 +10,8 @@ import (
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Get the status of services",
-	Long:  `Get the status of services`,
+	Short: "Get the status of apis",
+	Long:  `Get the status of apis`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Config file used: ", viper.ConfigFileUsed())
 		settings, _ := json.MarshalIndent(viper.AllSettings(), "", "  ")

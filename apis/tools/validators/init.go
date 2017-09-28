@@ -2,7 +2,7 @@ package validators
 
 import (
 	"github.com/asaskevich/govalidator"
-	"github.com/dohr-michael/relationship/services/tools/models"
+	"github.com/dohr-michael/relationship/apis/tools/models"
 )
 
 func init() {

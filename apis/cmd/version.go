@@ -4,17 +4,17 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/dohr-michael/relationship/services/cfg"
+	"github.com/dohr-michael/relationship/apis/cfg"
 
 	"github.com/spf13/cobra"
 )
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Get the version of services",
-	Long:  `Get the version of services`,
+	Short: "Get the version of apis",
+	Long:  `Get the version of apis`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("services version: ", cfg.Version)
+		fmt.Println("apis version: ", cfg.Version)
 	},
 }
 

@@ -1,4 +1,4 @@
-package: github.com/dohr-michael/relationship/services
+package: github.com/dohr-michael/relationship/apis
 import:
 - package: github.com/sirupsen/logrus
 - package: github.com/spf13/cobra

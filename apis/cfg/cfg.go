@@ -13,7 +13,7 @@ import (
 
 // Version is the current application version.
 // This variable is populated when building the binary with:
-// -ldflags "-X github.com/dohr-michael/relationship/services/cfg.Version=${VERSION}"
+// -ldflags "-X github.com/dohr-michael/relationship/apis/cfg.Version=${VERSION}"
 var Version string
 var logConfig = log.WithFields(log.Fields{
 	"module": "config",
@@ -28,7 +28,7 @@ func InitConfig(fileConfig string) {
 		viper.AddConfigPath(".relationship")
 		viper.AddConfigPath(home)
 	}
-	viper.SetConfigName("services")
+	viper.SetConfigName("apis")
 
 	// Read the config
 	if err := viper.ReadInConfig(); err != nil {
@@ -64,7 +64,7 @@ func InitConfig(fileConfig string) {
 // GetPort returns the port
 // default value is "8080"
 func GetPort() string {
-	port := viper.GetString("services.port")
+	port := viper.GetString("apis.port")
 	if port == "" {
 		return "27017"
 	}
@@ -74,7 +74,7 @@ func GetPort() string {
 // GetLogLevel returns the log level.
 // default value is "Error"
 func GetLogLevel() string {
-	return viper.GetString("services.log-level")
+	return viper.GetString("apis.log-level")
 }
 
 // GetMongoUrl returns the mongo host

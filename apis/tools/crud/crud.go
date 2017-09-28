@@ -4,25 +4,24 @@ import (
 	"github.com/pressly/chi"
 	"net/http"
 	log "github.com/sirupsen/logrus"
-	"github.com/dohr-michael/relationship/services/tools"
-	"github.com/dohr-michael/relationship/services/tools/mongo"
+	"github.com/dohr-michael/relationship/apis/tools"
+	"github.com/dohr-michael/relationship/apis/tools/mongo"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
-	"github.com/dohr-michael/relationship/services/tools/models"
+	"github.com/dohr-michael/relationship/apis/tools/models"
 )
 
 var logCmd = log.WithFields(log.Fields{
 	"module": "tools.crud",
 })
 
-type Updatable interface {
-	GetUpdatedAt() models.DateTime
-	SetUpdatedAt(value models.DateTime)
+type Audit struct {
+	By string          `json:"by" bson:"by" valid:"-"`
+	At models.DateTime `json:"at" bson:"at" valid:"-"`
 }
 
 type Entity interface {
-	Updatable
 	GetId() bson.ObjectId
 	GetIndex() int
 	SetIndex(value int)
@@ -33,16 +32,14 @@ type Entities interface {
 }
 
 type BaseEntity struct {
-	Id        bson.ObjectId   `json:"id" bson:"_id" valid:"-"`
-	Index     int             `json:"index" bson:"index" valid:"-"`
-	UpdatedAt models.DateTime `json:"updatedAt" bson:"updatedAt" valid:"-"`
+	Id    bson.ObjectId `json:"id" bson:"_id" valid:"-"`
+	Index int           `json:"index" bson:"index" valid:"-"`
+	Logs  []Audit       `json:"logs" bson:"logs" valid:"-"`
 }
 
-func (e *BaseEntity) GetId() bson.ObjectId               { return e.Id }
-func (e *BaseEntity) GetIndex() int                      { return e.Index }
-func (e *BaseEntity) SetIndex(value int)                 { e.Index = value }
-func (e *BaseEntity) GetUpdatedAt() models.DateTime      { return e.UpdatedAt }
-func (e *BaseEntity) SetUpdatedAt(value models.DateTime) { e.UpdatedAt = value }
+func (e *BaseEntity) GetId() bson.ObjectId { return e.Id }
+func (e *BaseEntity) GetIndex() int        { return e.Index }
+func (e *BaseEntity) SetIndex(value int)   { e.Index = value }
 
 type BaseEntities []BaseEntity
 
@@ -51,16 +48,18 @@ type Crud struct {
 	ItemsFactory        func() Entities
 	ItemFactory         func() Entity
 	ItemCreationFactory func() Entity
-	ItemUpdateFactory   func() Updatable
+	ItemUpdateFactory   func() interface{}
 }
 
-func (c *Crud) Router(router chi.Router) {
+func (c *Crud) Router(base string, router *chi.Mux) {
 	logCmd.Infof("Register %s", c.Collection)
-	router.Get("/", c.Filter)
-	router.Get("/{id}", c.ById)
-	router.Post("/", c.Create)
-	router.Put("/{id}", c.Update)
-	router.Delete("/{id}", c.Delete)
+	router.Route(base, func(r chi.Router) {
+		r.Get("/", c.Filter)
+		r.Get("/{id}", c.ById)
+		r.Post("/", c.Create)
+		r.Put("/{id}", c.Update)
+		r.Delete("/{id}", c.Delete)
+	})
 }
 
 func (c *Crud) Filter(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +108,6 @@ func (c *Crud) Create(w http.ResponseWriter, r *http.Request) {
 		nextIndex := mongo.GetNextIndex(c.Collection, db)
 		col := db.C(c.Collection)
 		body.SetIndex(nextIndex)
-		body.SetUpdatedAt(models.NewDateTime())
 		mongo.ParseError(col.Insert(body))
 		tools.JsonResult(map[string]interface{}{
 			"id": body.GetId(),
@@ -121,7 +119,6 @@ func (c *Crud) Update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	body := c.ItemUpdateFactory()
 	tools.DecodeJson(body, r)
-	body.SetUpdatedAt(models.NewDateTime())
 	mongo.Col(c.Collection, func(col *mgo.Collection) {
 		mongo.ParseError(col.Update(bson.M{"_id": mongo.GetId(id)}, bson.M{"$set": body}))
 		res := c.ItemFactory()
