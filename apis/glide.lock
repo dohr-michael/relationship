@@ -1,10 +1,12 @@
-hash: fa7753b16eb28e1bd1a4258c72bee1c6703861fe82f1ff9d89b3a47724785145
-updated: 2017-08-17T18:51:11.771060993+02:00
+hash: 30b81afaec84ba488ba601d036674c7d8325d5626ad8dee676530379a65df8a6
+updated: 2017-09-28T07:22:02.6861145+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
+- name: github.com/gin-gonic/gin
+  version: d459835d2b077e44f7c9b453505ee29881d5d12d
 - name: github.com/go-chi/chi
   version: 1ca66566bf578e28e60bc370874df92510ed5e6c
 - name: github.com/hashicorp/hcl
@@ -57,6 +59,11 @@ imports:
   - unicode/norm
 - name: gopkg.in/mgo.v2
   version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
+  subpackages:
+  - bson
+  - internal/json
+  - internal/sasl
+  - internal/scram
 - name: gopkg.in/yaml.v2
   version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
 testImports: []

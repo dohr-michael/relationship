@@ -3,6 +3,6 @@ import:
 - package: github.com/sirupsen/logrus
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper
-- package: github.com/pressly/chi
-- package: github.com/asaskevich/govalidator
 - package: gopkg.in/mgo.v2
+- package: github.com/gin-gonic/gin
+  version: ^1.2.0
