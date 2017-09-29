@@ -2,64 +2,23 @@ package cfg
 
 import (
 	"os"
-	log "github.com/sirupsen/logrus"
-	"os/user"
-	"path/filepath"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"io/ioutil"
-	"github.com/fsnotify/fsnotify"
-	"gopkg.in/yaml.v2"
 )
 
 // Version is the current application version.
 // This variable is populated when building the binary with:
 // -ldflags "-X github.com/dohr-michael/relationship/apis/cfg.Version=${VERSION}"
 var Version string
-var logConfig = log.WithFields(log.Fields{
+var log = logrus.WithFields(logrus.Fields{
 	"module": "config",
 })
 
-
-func InitConfig(fileConfig string) {
-	home := getOrCreateHome()
-	if fileConfig != "" {
-		viper.AddConfigPath(fileConfig)
-	} else {
-		viper.AddConfigPath(".relationship")
-		viper.AddConfigPath(home)
-	}
+func InitConfig() {
 	viper.SetConfigName("apis")
-
-	// Read the config
-	if err := viper.ReadInConfig(); err != nil {
-		e, ok := err.(viper.ConfigParseError)
-		if ok {
-			logConfig.Error(e)
-		}
-		logConfig.Warn("No config file used, writing config.yml with default values")
-		settings, _ := yaml.Marshal(viper.AllSettings())
-		if err := ioutil.WriteFile(filepath.Join(home, "config.yml"), settings, 0644); err != nil {
-			logConfig.Error(err)
-		}
-	} else {
-		logConfig.Info("Using config file: ", viper.ConfigFileUsed())
-	}
-
-	logConfig.Info("Home is: ", home)
-
-	// Watch for changes
-	viper.WatchConfig()
-	viper.OnConfigChange(func(e fsnotify.Event) {
-		logConfig.Info("Config file changed: ", e.Name)
-		logLevel := parseLogLevel(GetLogLevel())
-		log.SetLevel(logLevel)
-	})
-
 	logLevel := parseLogLevel(GetLogLevel())
-	log.SetLevel(logLevel)
-
+	logrus.SetLevel(logLevel)
 }
-
 
 // GetPort returns the port
 // default value is "8080"
@@ -97,43 +56,23 @@ func GetMongoDatabase() string {
 	return h
 }
 
-
-func parseLogLevel(level string) log.Level {
-	var logLevel log.Level
+func parseLogLevel(level string) logrus.Level {
+	var logLevel logrus.Level
 	var err error
-	logConfig.WithField("log-level", level).Info("Parsing log level")
-	if logLevel, err = log.ParseLevel(level); err != nil {
-		logLevel = log.ErrorLevel
-		logConfig.WithField("log-level", level).Error("Cannot parse log level, setting to Error")
+	log.WithField("log-level", level).Info("Parsing log level")
+	if logLevel, err = logrus.ParseLevel(level); err != nil {
+		logLevel = logrus.ErrorLevel
+		log.WithField("log-level", level).Error("Cannot parse log level, setting to Error")
 	}
 	return logLevel
 }
 
-// getOrCreateHome returns .gosspks subdir from
-// user's home directory and creates it if required
-func getOrCreateHome() string {
-	usr, err := user.Current()
-	if err != nil {
-		logConfig.Fatal(err)
-	}
-	logConfig.Info("Current user: ", usr.Username)
-	home := filepath.Join(usr.HomeDir, "/.relationship/")
-
-	if _, err := os.Stat(home); os.IsNotExist(err) {
-		logConfig.Info("Creating home: ", home)
-		if err := os.Mkdir(home, 0755); err != nil {
-			logConfig.Fatal(err)
-		}
-	}
-	return home
-}
-
 func init() {
 	// Sets logrus options
-	formatter := &log.TextFormatter{
+	formatter := &logrus.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "06/01/02 15:04:05.000",
 	}
-	log.SetFormatter(formatter)
-	log.SetOutput(os.Stderr)
+	logrus.SetFormatter(formatter)
+	logrus.SetOutput(os.Stderr)
 }

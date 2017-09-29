@@ -1,25 +1,19 @@
 package crud
 
 import (
-	"github.com/pressly/chi"
 	"net/http"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/dohr-michael/relationship/apis/tools"
 	"github.com/dohr-michael/relationship/apis/tools/mongo"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
-	"github.com/dohr-michael/relationship/apis/tools/models"
+	"github.com/gin-gonic/gin"
+	"time"
 )
 
-var logCmd = log.WithFields(log.Fields{
+var log = logrus.WithFields(logrus.Fields{
 	"module": "tools.crud",
 })
-
-type Audit struct {
-	By string          `json:"by" bson:"by" valid:"-"`
-	At models.DateTime `json:"at" bson:"at" valid:"-"`
-}
 
 type Entity interface {
 	GetId() bson.ObjectId
@@ -32,9 +26,10 @@ type Entities interface {
 }
 
 type BaseEntity struct {
-	Id    bson.ObjectId `json:"id" bson:"_id" valid:"-"`
-	Index int           `json:"index" bson:"index" valid:"-"`
-	Logs  []Audit       `json:"logs" bson:"logs" valid:"-"`
+	Id        bson.ObjectId `json:"id" bson:"_id" valid:"-"`
+	Index     int           `json:"index" bson:"index" valid:"-"`
+	UpdatedBy string        `json:"updatedBy" bson:"updatedBy"`
+	UpdatedAt time.Time     `json:"updatedAt" bson:"updatedAt" time_format:"2017-04-25T15:08:43.687Z"`
 }
 
 func (e *BaseEntity) GetId() bson.ObjectId { return e.Id }
@@ -51,82 +46,110 @@ type Crud struct {
 	ItemUpdateFactory   func() interface{}
 }
 
-func (c *Crud) Router(base string, router *chi.Mux) {
-	logCmd.Infof("Register %s", c.Collection)
-	router.Route(base, func(r chi.Router) {
-		r.Get("/", c.Filter)
-		r.Get("/{id}", c.ById)
-		r.Post("/", c.Create)
-		r.Put("/{id}", c.Update)
-		r.Delete("/{id}", c.Delete)
-	})
+func (c *Crud) Router(base string, router *gin.Engine) {
+	log.Infof("Register %s", c.Collection)
+	r := router.Group(base)
+	{
+		r.GET("/", c.Filter)
+		r.GET("/:id", c.ById)
+		r.POST("/", c.Create)
+		r.PUT("/:id", c.Update)
+		r.DELETE("/:id", c.Delete)
+	}
 }
 
-func (c *Crud) Filter(w http.ResponseWriter, r *http.Request) {
+type filterQuery struct {
+	From int `form:"from"`
+	Size int `form:"size"`
+}
+
+func (c *Crud) Filter(context *gin.Context) {
 	// TODO Read props
-	var from int = 0
-	if pFrom, err := strconv.ParseInt(r.URL.Query().Get("from"), 10, 64); err == nil {
-		from = int(pFrom)
-	}
-	var size int = 0
-	if pSize, err := strconv.ParseInt(r.URL.Query().Get("size"), 10, 64); err == nil {
-		size = int(pSize)
-	}
+	var query filterQuery
+	context.Bind(&query)
+
 	mongo.Col(c.Collection, func(col *mgo.Collection) {
 		items := c.ItemsFactory()
-		total, err1 := col.Find(bson.M{}).Count()
-		mongo.ParseError(err1)
-		var q = col.Find(bson.M{"index": bson.M{"$gte": from}}).Sort("-index")
-		if size != 0 {
-			q = q.Limit(size)
+		var total int
+		var err error
+		if total, err = col.Find(bson.M{}).Count(); err != nil {
+			mongo.ToHttpError(err, context)
+			return
 		}
-		mongo.ParseError(q.All(items))
+		var q = col.Find(bson.M{"index": bson.M{"$gte": query.From}}).Sort("-index")
+		if query.Size != 0 {
+			q = q.Limit(query.Size)
+		}
+		if err = q.All(items); err != nil {
+			mongo.ToHttpError(err, context)
+		}
 		length := items.Len()
-		tools.JsonResult(&tools.Paginate{
+		res := &tools.Paginate{
 			Length: length,
-			Offset: from,
+			Offset: query.From,
 			Total:  total,
 			Items:  items,
-		})(w, r)
+		}
+		context.JSON(http.StatusOK, &res)
 	})
 }
 
-func (c *Crud) ById(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+func (c *Crud) ById(context *gin.Context) {
+	id := context.Param("id")
 
 	mongo.Col(c.Collection, func(col *mgo.Collection) {
 		item := c.ItemFactory()
-		mongo.ParseError(col.Find(bson.M{"_id": mongo.GetId(id),}).One(item), c.Collection, id)
-		tools.JsonResult(&item)(w, r)
+		if err := col.Find(bson.M{"_id": mongo.GetId(id),}).One(item); err != nil {
+			mongo.ToHttpError(err, context, "byId", c.Collection, id)
+			return
+		}
+		context.JSON(http.StatusOK, &item)
 	})
 }
 
-func (c *Crud) Create(w http.ResponseWriter, r *http.Request) {
+func (c *Crud) Create(context *gin.Context) {
 	body := c.ItemCreationFactory()
-	tools.DecodeJson(body, r)
+	if err := context.BindJSON(body); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	mongo.DB(func(db *mgo.Database) {
-		nextIndex := mongo.GetNextIndex(c.Collection, db)
+		nextIndex, err := mongo.GetNextIndex(c.Collection, db)
+		if err != nil {
+			mongo.ToHttpError(err, context, "create", c.Collection)
+			return
+		}
 		col := db.C(c.Collection)
 		body.SetIndex(nextIndex)
-		mongo.ParseError(col.Insert(body))
-		tools.JsonResult(map[string]interface{}{
-			"id": body.GetId(),
-		})(w, r)
+		if err := col.Insert(body); err != nil {
+			mongo.ToHttpError(err, context, "create", c.Collection)
+			return
+		}
+		context.JSON(http.StatusCreated, gin.H{"id": body.GetId()})
 	})
 }
 
-func (c *Crud) Update(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+func (c *Crud) Update(context *gin.Context) {
+	id := context.Param("id")
 	body := c.ItemUpdateFactory()
-	tools.DecodeJson(body, r)
+	if err := context.BindJSON(body); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	mongo.Col(c.Collection, func(col *mgo.Collection) {
-		mongo.ParseError(col.Update(bson.M{"_id": mongo.GetId(id)}, bson.M{"$set": body}))
+		if err := col.Update(bson.M{"_id": mongo.GetId(id)}, bson.M{"$set": body}); err != nil {
+			mongo.ToHttpError(err, context, "update", c.Collection, id)
+			return
+		}
 		res := c.ItemFactory()
-		mongo.ParseError(col.Find(bson.M{"_id": mongo.GetId(id),}).One(res))
-		tools.JsonResult(&res)(w, r)
+		if err := col.Find(bson.M{"_id": mongo.GetId(id),}).One(res); err != nil {
+			mongo.ToHttpError(err, context, "update", c.Collection, id)
+			return
+		}
+		context.JSON(http.StatusCreated, &res)
 	})
 }
 
-func (c *Crud) Delete(w http.ResponseWriter, r *http.Request) {
+func (c *Crud) Delete(context *gin.Context) {
 
 }

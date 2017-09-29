@@ -3,8 +3,9 @@ package mongo
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/dohr-michael/relationship/apis/tools"
 	"github.com/dohr-michael/relationship/apis/cfg"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 var indexCol = "colIdx"
@@ -15,15 +16,17 @@ type collectionIndex struct {
 	Index      int    `bson:"index"`
 }
 
-func GetNextIndex(col string, db *mgo.Database) int {
+func GetNextIndex(col string, db *mgo.Database) (int, error) {
 	res := collectionIndex{}
 	collection := db.C(indexCol)
-	_, err := collection.Upsert(bson.M{"collection": col,}, bson.M{"$set": bson.M{"collection": col},})
-	ParseError(err, "GetNextIndex", col)
+	if _, err := collection.Upsert(bson.M{"collection": col,}, bson.M{"$set": bson.M{"collection": col},}); err != nil {
+		return 0, err
+	}
 	change := mgo.Change{Update: bson.M{"$inc": bson.M{"index": 1,},}, ReturnNew: false}
-	_, err2 := collection.Find(bson.M{"collection": col,}).Sort("-index").Apply(change, &res)
-	ParseError(err2, "GetNextIndex", col)
-	return res.Index
+	if _, err := collection.Find(bson.M{"collection": col,}).Sort("-index").Apply(change, &res); err != nil {
+		return 0, err
+	}
+	return res.Index, nil
 }
 
 func GetId(id string) interface{} {
@@ -33,20 +36,19 @@ func GetId(id string) interface{} {
 	return id
 }
 
-func ParseError(err error, details ...interface{}) {
-	if err != nil {
-		if err == mgo.ErrNotFound {
-			tools.Panic("not.found", 404, details...)
-		} else {
-			tools.Panic(err.Error(), 500, details...)
-		}
+func ToHttpError(err error, c *gin.Context, details ...interface{}) {
+	errorPayload := gin.H{"error": err.Error(), "details": details}
+	if err == mgo.ErrNotFound {
+		c.JSON(http.StatusNotFound, errorPayload)
+	} else {
+		c.JSON(http.StatusInternalServerError, errorPayload)
 	}
 }
 
 func DB(fn func(db *mgo.Database)) {
 	session, err := mgo.Dial(cfg.GetMongoUrl())
 	if err != nil {
-		ParseError(err)
+		panic(err)
 	}
 	defer session.Close()
 	db := session.DB(cfg.GetMongoDatabase())

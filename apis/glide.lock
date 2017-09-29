@@ -1,14 +1,19 @@
-hash: 30b81afaec84ba488ba601d036674c7d8325d5626ad8dee676530379a65df8a6
-updated: 2017-09-28T07:22:02.6861145+02:00
+hash: aa286ef8696df3984bb27446ef70e7753d86a45c2209885d6d460e5a7c25ad63
+updated: 2017-09-28T21:38:06.4410741+02:00
 imports:
-- name: github.com/asaskevich/govalidator
-  version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
+- name: github.com/gin-contrib/sse
+  version: 22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae
 - name: github.com/gin-gonic/gin
   version: d459835d2b077e44f7c9b453505ee29881d5d12d
-- name: github.com/go-chi/chi
-  version: 1ca66566bf578e28e60bc370874df92510ed5e6c
+  subpackages:
+  - binding
+  - render
+- name: github.com/golang/protobuf
+  version: 130e6b02ab059e7b717a096f397c5b60111cae74
+  subpackages:
+  - proto
 - name: github.com/hashicorp/hcl
   version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
@@ -24,14 +29,12 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
   version: be5ece7dd465ab0765a9682137865547526d1dfb
+- name: github.com/mattn/go-isatty
+  version: a5cdd64afdee435007ee3e9f6ed4684af949d568
 - name: github.com/mitchellh/mapstructure
   version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/pelletier/go-toml
   version: 69d355db5304c0f7f809a2edc054553e7142f016
-- name: github.com/pressly/chi
-  version: 25354a53cca531cb2efd3f1d3c565d90ff04d802
-  subpackages:
-  - middleware
 - name: github.com/sirupsen/logrus
   version: a3f95b5c423586578a4e099b11a46c2479628cac
 - name: github.com/spf13/afero
@@ -48,6 +51,10 @@ imports:
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
+- name: github.com/ugorji/go
+  version: 54210f4e076c57f351166f0ed60e67d3fca57a36
+  subpackages:
+  - codec
 - name: golang.org/x/sys
   version: e42485b6e20ae7d2304ec72e535b103ed350cc02
   subpackages:
@@ -57,6 +64,8 @@ imports:
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/go-playground/validator.v8
+  version: 5f1438d3fca68893a817e4a66806cea46a9e4ebf
 - name: gopkg.in/mgo.v2
   version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
   subpackages:

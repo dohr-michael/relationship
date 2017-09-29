@@ -5,9 +5,6 @@ import (
 	"strings"
 
 	"github.com/dohr-michael/relationship/apis/cfg"
-	"github.com/pressly/chi"
-	"github.com/pressly/chi/middleware"
-	//"github.com/dohr-michael/relationship/apis/router"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -15,10 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/dohr-michael/relationship/apis/router"
-	"github.com/dohr-michael/relationship/apis/tools"
+	"github.com/gin-gonic/gin"
 )
-
-var cfgFile string
 
 var logCmd = log.WithFields(log.Fields{
 	"module": "cmd",
@@ -30,14 +25,10 @@ var RootCmd = &cobra.Command{
 	Short: "Serving relationship apis.",
 	Long:  `Serving relationship apis`,
 	Run: func(cmd *cobra.Command, args []string) {
-		r := chi.NewRouter()
-		r.Use(middleware.RequestID)
-		r.Use(middleware.Logger)
-		r.Use(tools.ErrorHandler)
-		r.Route("/", func(r chi.Router) {
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Version : %s", cfg.Version)))
-			})
+		r := gin.New()
+		r.Use(gin.Logger(), gin.Recovery())
+		r.GET("/", func(c *gin.Context) {
+			c.String(http.StatusOK, fmt.Sprintf("Version : %s", cfg.Version))
 		})
 		router.InitRouter(r)
 
@@ -53,8 +44,7 @@ func Execute() {
 
 func init() {
 	// CMD line args > ENV VARS > Config file
-	cobra.OnInitialize(func() { cfg.InitConfig(cfgFile) })
-	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "C", "", "config file (default is $HOME/.relationship/config.yml)")
+	cobra.OnInitialize(func() { cfg.InitConfig() })
 	// Optional flags
 	RootCmd.PersistentFlags().IntP("port", "p", 8080, "port to listen to (default is 8080)")
 	RootCmd.PersistentFlags().StringP("log-level", "l", "Error", "log level [Error,Warn,Info,Debug]")

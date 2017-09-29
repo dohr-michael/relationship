@@ -1,8 +1,11 @@
 package: github.com/dohr-michael/relationship/apis
 import:
+- package: github.com/fsnotify/fsnotify
+- package: github.com/gin-gonic/gin
 - package: github.com/sirupsen/logrus
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper
 - package: gopkg.in/mgo.v2
-- package: github.com/gin-gonic/gin
-  version: ^1.2.0
+  subpackages:
+  - bson
+- package: gopkg.in/yaml.v2

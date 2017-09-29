@@ -1,15 +1,15 @@
 package router
 
 import (
-	"github.com/pressly/chi"
 	log "github.com/sirupsen/logrus"
 	"github.com/dohr-michael/relationship/apis/app/services"
+	"github.com/gin-gonic/gin"
 )
 
 var logCmd = log.WithFields(log.Fields{
 	"module": "router",
 })
 
-func InitRouter(router *chi.Mux) {
+func InitRouter(router *gin.Engine) {
 	services.UniverseRouter("/universes", router)
 }
