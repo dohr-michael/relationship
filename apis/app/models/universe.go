@@ -8,8 +8,8 @@ import (
 )
 
 type Universe struct {
-	crud.BaseEntity `json:",inline" bson:",inline" valid:"required"`
-	Name string     `json:"name" bson:"name" valid:"required"`
+	crud.BaseEntity `json:",inline" bson:",inline" binding:"required"`
+	Name string     `json:"name" bson:"name" binding:"required"`
 }
 
 type Universes []Universe
@@ -19,7 +19,7 @@ func (u *Universes) Len() int {
 }
 
 type UniverseCreation struct {
-	Universe `bson:",inline" valid:"required"`
+	Universe `bson:",inline" binding:"required"`
 }
 
 func (u *UniverseCreation) UnmarshalJSON(data []byte) error {
@@ -33,8 +33,8 @@ func (u *UniverseCreation) UnmarshalJSON(data []byte) error {
 }
 
 type UniverseUpdate struct {
-	Name      string          `json:"name" bson:"name" valid:"required"`
-	UpdatedAt models.DateTime `json:"-" bson:"updatedAt" valid:"-"`
+	Name      string          `json:"name" bson:"name" binding:"required"`
+	UpdatedAt models.DateTime `json:"-" bson:"updatedAt" binding:"-"`
 }
 
 func (u *UniverseUpdate) GetUpdatedAt() models.DateTime      { return u.UpdatedAt }

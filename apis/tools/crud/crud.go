@@ -26,8 +26,8 @@ type Entities interface {
 }
 
 type BaseEntity struct {
-	Id        bson.ObjectId `json:"id" bson:"_id" valid:"-"`
-	Index     int           `json:"index" bson:"index" valid:"-"`
+	Id        bson.ObjectId `json:"id" bson:"_id" binding:"-"`
+	Index     int           `json:"index" bson:"index" binding:"-"`
 	UpdatedBy string        `json:"updatedBy" bson:"updatedBy"`
 	UpdatedAt time.Time     `json:"updatedAt" bson:"updatedAt" time_format:"2017-04-25T15:08:43.687Z"`
 }

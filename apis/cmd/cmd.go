@@ -13,6 +13,10 @@ import (
 	"fmt"
 	"github.com/dohr-michael/relationship/apis/router"
 	"github.com/gin-gonic/gin"
+	"os"
+	"os/signal"
+	"context"
+	"time"
 )
 
 var logCmd = log.WithFields(log.Fields{
@@ -25,6 +29,7 @@ var RootCmd = &cobra.Command{
 	Short: "Serving relationship apis.",
 	Long:  `Serving relationship apis`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Initialize the router
 		r := gin.New()
 		r.Use(gin.Logger(), gin.Recovery())
 		r.GET("/", func(c *gin.Context) {
@@ -32,7 +37,31 @@ var RootCmd = &cobra.Command{
 		})
 		router.InitRouter(r)
 
-		logCmd.Fatal(http.ListenAndServe(":"+cfg.GetPort(), r))
+		// Prepare run of the application
+		srv := http.Server{
+			Addr:    ":" + cfg.GetPort(),
+			Handler: r,
+		}
+
+		go func() {
+			if err := srv.ListenAndServe(); err != nil {
+				logCmd.Error(err)
+			}
+		}()
+
+		// Wait for interrupt signal to gracefully shutdown the server with
+		// a timeout of 5 seconds.
+		quit := make(chan os.Signal)
+		signal.Notify(quit, os.Interrupt)
+		<-quit
+		logCmd.Info("Shutdown Server ...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatal("Server Shutdown:", err)
+		}
+		log.Println("Server exiting")
 	},
 }
 
