@@ -15,35 +15,41 @@ var log = logrus.WithFields(logrus.Fields{
 	"module": "tools.crud",
 })
 
-type Entity interface {
-	GetId() bson.ObjectId
-	GetIndex() int
-	SetIndex(value int)
-}
-
 type Entities interface {
 	Len() int
 }
 
-type BaseEntity struct {
-	Id        bson.ObjectId `json:"id" bson:"_id" binding:"-"`
-	Index     int           `json:"index" bson:"index" binding:"-"`
-	UpdatedBy string        `json:"updatedBy" bson:"updatedBy"`
-	UpdatedAt time.Time     `json:"updatedAt" bson:"updatedAt" time_format:"2017-04-25T15:08:43.687Z"`
+type WithEntity interface {
+	SetEntity(entity *Entity)
+	GetEntity() *Entity
 }
 
-func (e *BaseEntity) GetId() bson.ObjectId { return e.Id }
-func (e *BaseEntity) GetIndex() int        { return e.Index }
-func (e *BaseEntity) SetIndex(value int)   { e.Index = value }
+type Entity struct {
+	Id        bson.ObjectId `json:"id,omitempty" bson:"_id,omitempty" binding:"-"`
+	Index     int           `json:"index,omitempty" bson:"index,omitempty" binding:"-"`
+	UpdatedBy string        `json:"updatedBy,omitempty" bson:"updatedBy,omitempty"`
+	UpdatedAt time.Time     `json:"updatedAt,omitempty" bson:"updatedAt,omitempty" time_format:"2017-04-25T15:08:43.687Z"`
+}
 
-type BaseEntities []BaseEntity
+func (e *Entity) SetEntity(entity *Entity) {
+	e.Id = entity.Id
+	e.Index = entity.Index
+	e.UpdatedBy = entity.UpdatedBy
+	e.UpdatedAt = entity.UpdatedAt
+}
+
+func (e *Entity) GetEntity() *Entity {
+	return e
+}
+
+type BaseEntities []Entity
 
 type Crud struct {
 	Collection          string
 	ItemsFactory        func() Entities
-	ItemFactory         func() Entity
-	ItemCreationFactory func() Entity
-	ItemUpdateFactory   func() interface{}
+	ItemFactory         func() WithEntity
+	ItemCreationFactory func() WithEntity
+	ItemUpdateFactory   func() WithEntity
 }
 
 func (c *Crud) Router(base string, router *gin.Engine) {
@@ -109,7 +115,9 @@ func (c *Crud) ById(context *gin.Context) {
 
 func (c *Crud) Create(context *gin.Context) {
 	body := c.ItemCreationFactory()
+	log.Debug("Start creating...", c.Collection)
 	if err := context.BindJSON(body); err != nil {
+		log.Error("Error when reading payload", c.Collection, err.Error())
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -120,12 +128,13 @@ func (c *Crud) Create(context *gin.Context) {
 			return
 		}
 		col := db.C(c.Collection)
-		body.SetIndex(nextIndex)
-		if err := col.Insert(body); err != nil {
+		// TODO UpdatedBy from context.
+		body.SetEntity(&Entity{Id: bson.NewObjectId(), Index: nextIndex, UpdatedAt: time.Now(), UpdatedBy: "dohr.michael@gmail.com"})
+		if err := col.Insert(&body); err != nil {
 			mongo.ToHttpError(err, context, "create", c.Collection)
 			return
 		}
-		context.JSON(http.StatusCreated, gin.H{"id": body.GetId()})
+		context.JSON(http.StatusCreated, gin.H{"id": body.GetEntity().Id})
 	})
 }
 
@@ -137,6 +146,8 @@ func (c *Crud) Update(context *gin.Context) {
 		return
 	}
 	mongo.Col(c.Collection, func(col *mgo.Collection) {
+		// TODO UpdatedBy from context.
+		body.SetEntity(&Entity{UpdatedBy: "dohr.michael@gmail.com", UpdatedAt: time.Now()})
 		if err := col.Update(bson.M{"_id": mongo.GetId(id)}, bson.M{"$set": body}); err != nil {
 			mongo.ToHttpError(err, context, "update", c.Collection, id)
 			return

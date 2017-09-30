@@ -22,7 +22,7 @@ func GetNextIndex(col string, db *mgo.Database) (int, error) {
 	if _, err := collection.Upsert(bson.M{"collection": col,}, bson.M{"$set": bson.M{"collection": col},}); err != nil {
 		return 0, err
 	}
-	change := mgo.Change{Update: bson.M{"$inc": bson.M{"index": 1,},}, ReturnNew: false}
+	change := mgo.Change{Update: bson.M{"$inc": bson.M{"index": 1,},}, ReturnNew: true}
 	if _, err := collection.Find(bson.M{"collection": col,}).Sort("-index").Apply(change, &res); err != nil {
 		return 0, err
 	}

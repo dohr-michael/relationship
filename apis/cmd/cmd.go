@@ -76,7 +76,7 @@ func init() {
 	cobra.OnInitialize(func() { cfg.InitConfig() })
 	// Optional flags
 	RootCmd.PersistentFlags().IntP("port", "p", 8080, "port to listen to (default is 8080)")
-	RootCmd.PersistentFlags().StringP("log-level", "l", "Error", "log level [Error,Warn,Info,Debug]")
+	RootCmd.PersistentFlags().StringP("log-level", "l", "Debug", "log level [Error,Warn,Info,Debug]")
 	// Bind flags to config
 	viper.BindPFlag("apis.port", RootCmd.PersistentFlags().Lookup("port"))
 	viper.BindPFlag("apis.log-level", RootCmd.PersistentFlags().Lookup("log-level"))
