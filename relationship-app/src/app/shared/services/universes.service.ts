@@ -1,18 +1,33 @@
-import { Injectable } from '@angular/core';
-import { ApiService } from './api.service';
-import { Observable } from 'rxjs/Observable';
-import { Universe, Paginate } from '../models';
+import {Injectable} from '@angular/core';
+import {ApiService} from './api.service';
+import {Observable} from 'rxjs/Observable';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
+import {Universe, neo} from '../models';
 
 @Injectable()
 export class UniversesService {
-  
-  constructor( private api: ApiService ) {}
-  
-  getAll(): Observable<Paginate<Universe>> {
-    return this.api.get<Paginate<Universe>>( '/universes' );
+  // Internal subjects
+  private _universes: BehaviorSubject<neo.Node<Universe>[]> = new BehaviorSubject([]);
+  private _isLoaded: BehaviorSubject<boolean> = new BehaviorSubject(false);
+
+  // Public observable
+  readonly universes = this._universes.asObservable();
+  readonly isLoaded = this._isLoaded.asObservable();
+
+
+  constructor(private api: ApiService) {}
+
+  load() {
+    this._isLoaded.next(false);
+
   }
-  
-  getOne( id: string ): Observable<Universe> {
-    return this.api.get<Universe>( `/universes/${id}` );
+
+  create(obj: Universe.Creation) {
+
   }
+
+  update(obj: Universe.Update) {
+
+  }
+
 }
