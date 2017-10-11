@@ -4,11 +4,7 @@ import (
 	"net/http"
 	"github.com/sirupsen/logrus"
 	"github.com/dohr-michael/relationship/apis/tools"
-	"github.com/dohr-michael/relationship/apis/tools/mongo"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 var log = logrus.WithFields(logrus.Fields{
@@ -25,17 +21,13 @@ type WithEntity interface {
 }
 
 type Entity struct {
-	Id        bson.ObjectId `json:"id,omitempty" bson:"_id,omitempty" binding:"-"`
-	Index     int           `json:"index,omitempty" bson:"index,omitempty" binding:"-"`
-	UpdatedBy string        `json:"updatedBy,omitempty" bson:"updatedBy,omitempty"`
-	UpdatedAt time.Time     `json:"updatedAt,omitempty" bson:"updatedAt,omitempty" time_format:"2017-04-25T15:08:43.687Z"`
+	Hash  string `json:"hash,omitempty" binding:"-"`
+	Index int    `json:"index,omitempty" binding:"-"`
 }
 
 func (e *Entity) SetEntity(entity *Entity) {
-	e.Id = entity.Id
+	e.Hash = entity.Hash
 	e.Index = entity.Index
-	e.UpdatedBy = entity.UpdatedBy
-	e.UpdatedAt = entity.UpdatedAt
 }
 
 func (e *Entity) GetEntity() *Entity {
@@ -44,8 +36,16 @@ func (e *Entity) GetEntity() *Entity {
 
 type BaseEntities []Entity
 
+type Cru interface {
+	Filter(context *gin.Context)
+	ById(context *gin.Context)
+	Create(context *gin.Context)
+	Update(context *gin.Context)
+	Delete(context *gin.Context)
+}
+
 type Crud struct {
-	Collection          string
+	Type                string
 	ItemsFactory        func() Entities
 	ItemFactory         func() WithEntity
 	ItemCreationFactory func() WithEntity
@@ -53,7 +53,7 @@ type Crud struct {
 }
 
 func (c *Crud) Router(base string, router *gin.Engine) {
-	log.Infof("Register %s", c.Collection)
+	log.Infof("Register %s", c.Type)
 	r := router.Group(base)
 	{
 		r.GET("/", c.Filter)
@@ -73,94 +73,60 @@ func (c *Crud) Filter(context *gin.Context) {
 	// TODO Read props
 	var query filterQuery
 	context.Bind(&query)
+	res := &tools.Paginate{
+		Length: 0,
+		Total:  0,
+		Offset: 0,
+		Items:  make([]interface{}, 0),
+	}
+	var err error
+	if err != nil {
 
-	mongo.Col(c.Collection, func(col *mgo.Collection) {
-		items := c.ItemsFactory()
-		var total int
-		var err error
-		if total, err = col.Find(bson.M{}).Count(); err != nil {
-			mongo.ToHttpError(err, context)
-			return
-		}
-		var q = col.Find(bson.M{"index": bson.M{"$gte": query.From}}).Sort("-index")
-		if query.Size != 0 {
-			q = q.Limit(query.Size)
-		}
-		if err = q.All(items); err != nil {
-			mongo.ToHttpError(err, context)
-		}
-		length := items.Len()
-		res := &tools.Paginate{
-			Length: length,
-			Offset: query.From,
-			Total:  total,
-			Items:  items,
-		}
-		context.JSON(http.StatusOK, &res)
-	})
+		return
+	}
+	context.JSON(http.StatusOK, &res)
 }
 
 func (c *Crud) ById(context *gin.Context) {
-	id := context.Param("id")
-
-	mongo.Col(c.Collection, func(col *mgo.Collection) {
-		item := c.ItemFactory()
-		if err := col.Find(bson.M{"_id": mongo.GetId(id),}).One(item); err != nil {
-			mongo.ToHttpError(err, context, "byId", c.Collection, id)
-			return
-		}
-		context.JSON(http.StatusOK, &item)
-	})
+	//hash := context.Param("hash")
+	item := c.ItemFactory()
+	var err error
+	if err != nil {
+		return
+	}
+	context.JSON(http.StatusOK, &item)
 }
 
 func (c *Crud) Create(context *gin.Context) {
 	body := c.ItemCreationFactory()
-	log.Debug("Start creating...", c.Collection)
+	log.Debug("Start creating...", c.Type)
 	if err := context.BindJSON(body); err != nil {
-		log.Error("Error when reading payload", c.Collection, err.Error())
+		log.Error("Error when reading payload", c.Type, err.Error())
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	mongo.DB(func(db *mgo.Database) {
-		nextIndex, err := mongo.GetNextIndex(c.Collection, db)
-		if err != nil {
-			mongo.ToHttpError(err, context, "create", c.Collection)
-			return
-		}
-		col := db.C(c.Collection)
-		// TODO UpdatedBy from context.
-		body.SetEntity(&Entity{Id: bson.NewObjectId(), Index: nextIndex, UpdatedAt: time.Now(), UpdatedBy: "dohr.michael@gmail.com"})
-		if err := col.Insert(&body); err != nil {
-			mongo.ToHttpError(err, context, "create", c.Collection)
-			return
-		}
-		context.JSON(http.StatusCreated, gin.H{"id": body.GetEntity().Id})
-	})
+	var err error
+	if err != nil {
+		return
+	}
+	context.JSON(http.StatusCreated, gin.H{"hash": body.GetEntity().Hash})
 }
 
 func (c *Crud) Update(context *gin.Context) {
-	id := context.Param("id")
+	//hash := context.Param("hash")
 	body := c.ItemUpdateFactory()
 	if err := context.BindJSON(body); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	mongo.Col(c.Collection, func(col *mgo.Collection) {
-		// TODO UpdatedBy from context.
-		body.SetEntity(&Entity{UpdatedBy: "dohr.michael@gmail.com", UpdatedAt: time.Now()})
-		if err := col.Update(bson.M{"_id": mongo.GetId(id)}, bson.M{"$set": body}); err != nil {
-			mongo.ToHttpError(err, context, "update", c.Collection, id)
-			return
-		}
-		res := c.ItemFactory()
-		if err := col.Find(bson.M{"_id": mongo.GetId(id),}).One(res); err != nil {
-			mongo.ToHttpError(err, context, "update", c.Collection, id)
-			return
-		}
-		context.JSON(http.StatusCreated, &res)
-	})
+	res := c.ItemFactory()
+	var err error
+	if err != nil {
+		return
+	}
+	context.JSON(http.StatusCreated, &res)
 }
 
 func (c *Crud) Delete(context *gin.Context) {
-
+	//hash := context.Param("hash")
 }

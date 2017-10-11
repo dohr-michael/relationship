@@ -13,4 +13,5 @@ var logCmd = log.WithFields(log.Fields{
 func InitRouter(router *gin.Engine) {
 	logCmd.Info("Init all routers")
 	services.UniverseRouter("/universes", router)
+	services.EntityRouter("/entities", router)
 }

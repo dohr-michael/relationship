@@ -1,14 +1,13 @@
 package tools
 
 type SearchRequest struct {
-	Start  int               `json:"start" validate:"-"`
-	Length int               `json:"length" validate:"-"`
-	Query  map[string]string `json:"query" validate:"-"`
+	Page int `json:"page" form:"page" validate:"-"`
+	Size int `json:"size" form:"size" validate:"-"`
 }
 
 type Paginate struct {
 	Length int         `json:"length"`
 	Offset int         `json:"offset"`
-	Total  int         `json:"total"`
+	Total  int64       `json:"total"`
 	Items  interface{} `json:"items"`
 }

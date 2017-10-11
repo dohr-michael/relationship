@@ -25,7 +25,7 @@ func InitConfig() {
 func GetPort() string {
 	port := viper.GetString("apis.port")
 	if port == "" {
-		return "27017"
+		return "8080"
 	}
 	return port
 }
@@ -39,21 +39,25 @@ func GetLogLevel() string {
 // GetMongoUrl returns the mongo host
 // default value is "localhost:27017"
 func GetMongoUrl() string {
-	h := viper.GetString("mongo.url")
-	if h == "" {
-		return "localhost"
-	}
-	return h
+	return viper.GetString("mongo.url")
 }
 
 // GetMongoUrl returns the mongo host
 // default value is "relationship"
 func GetMongoDatabase() string {
-	h := viper.GetString("mongo.database")
-	if h == "" {
-		return "relationship"
-	}
-	return h
+	return viper.GetString("mongo.database")
+}
+
+func GetNeoUrl() string {
+	return viper.GetString("neo.url")
+}
+
+func GetNeoUser() string {
+	return viper.GetString("neo.user")
+}
+
+func GetNeoPassword() string {
+	return viper.GetString("neo.password")
 }
 
 func parseLogLevel(level string) logrus.Level {

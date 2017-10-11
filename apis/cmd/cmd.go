@@ -77,9 +77,19 @@ func init() {
 	// Optional flags
 	RootCmd.PersistentFlags().IntP("port", "p", 8080, "port to listen to (default is 8080)")
 	RootCmd.PersistentFlags().StringP("log-level", "l", "Debug", "log level [Error,Warn,Info,Debug]")
+	RootCmd.PersistentFlags().StringP("mongo-url", "", "localhost:27017", "mongo uri (default is localhost:27017)")
+	RootCmd.PersistentFlags().StringP("mongo-db", "", "relationship", "mongo database (default is relationship)")
+	RootCmd.PersistentFlags().StringP("neo-url", "", "localhost:7687", "neo url (default is localhost:7687)")
+	RootCmd.PersistentFlags().StringP("neo-user", "", "neo4j", "neo user (default is neo4j)")
+	RootCmd.PersistentFlags().StringP("neo-password", "", "azerty", "neo password (default is azerty)")
 	// Bind flags to config
 	viper.BindPFlag("apis.port", RootCmd.PersistentFlags().Lookup("port"))
 	viper.BindPFlag("apis.log-level", RootCmd.PersistentFlags().Lookup("log-level"))
+	viper.BindPFlag("mongo.url", RootCmd.PersistentFlags().Lookup("mongo-url"))
+	viper.BindPFlag("mongo.database", RootCmd.PersistentFlags().Lookup("mongo-db"))
+	viper.BindPFlag("neo.url", RootCmd.PersistentFlags().Lookup("neo-url"))
+	viper.BindPFlag("neo.user", RootCmd.PersistentFlags().Lookup("neo-user"))
+	viper.BindPFlag("neo.password", RootCmd.PersistentFlags().Lookup("neo-password"))
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 }

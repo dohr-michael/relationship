@@ -9,3 +9,7 @@ import:
   subpackages:
   - bson
 - package: gopkg.in/yaml.v2
+- package: github.com/johnnadratowski/golang-neo4j-bolt-driver
+  version: ~0.1.0
+- package: github.com/google/uuid
+  version: ~0.2.0
