@@ -1,0 +1,9 @@
+<app-navbar class="mat-elevation-z6" [title]="title" [onNavClick]="toggleSidebar"></app-navbar>
+<mat-sidenav-container class="app">
+  <mat-sidenav #side mode="side">
+    <app-sidebar></app-sidebar>
+  </mat-sidenav>
+  <div class="app__content">
+    <router-outlet></router-outlet>
+  </div>
+</mat-sidenav-container>

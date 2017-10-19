@@ -1,14 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { UniversesService } from './shared/services/universes.service';
 
 @Component( {
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  template: '<app-layout [title]="title"></app-layout>',
+  styleUrls: [ './app.component.scss' ]
 } )
-export class AppComponent {
-  title = 'app';
+export class AppComponent implements OnInit {
+  title = 'Relationship App';
 
-  constructor() {
-    console.log( 'Hello, World' );
+
+  constructor( private universesService: UniversesService ) {}
+
+  ngOnInit(): void {
+    this.universesService.load();
   }
 }

@@ -1,6 +1,6 @@
 export interface Paginate<T> {
   items: T[];
-  offset: number;
-  length: number;
+  page: number;
+  size: number;
   total: number;
 }

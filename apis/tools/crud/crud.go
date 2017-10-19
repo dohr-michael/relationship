@@ -74,9 +74,9 @@ func (c *Crud) Filter(context *gin.Context) {
 	var query filterQuery
 	context.Bind(&query)
 	res := &tools.Paginate{
-		Length: 0,
+		Size: 0,
 		Total:  0,
-		Offset: 0,
+		Page: 0,
 		Items:  make([]interface{}, 0),
 	}
 	var err error

@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/dohr-michael/relationship/apis/app/services"
 	"github.com/gin-gonic/gin"
+	"github.com/dohr-michael/relationship/apis/tools"
 )
 
 var logCmd = log.WithFields(log.Fields{
@@ -12,6 +13,11 @@ var logCmd = log.WithFields(log.Fields{
 
 func InitRouter(router *gin.Engine) {
 	logCmd.Info("Init all routers")
-	services.UniverseRouter("/universes", router)
-	services.EntityRouter("/entities", router)
+	group := router.Group("/api")
+	{
+		group.Use(tools.NoCacheMiddleware)
+		services.UniverseRouter("/universes", group)
+		services.EntityRouter("/entities", group)
+	}
+
 }

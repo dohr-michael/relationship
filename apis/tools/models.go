@@ -6,8 +6,8 @@ type SearchRequest struct {
 }
 
 type Paginate struct {
-	Length int         `json:"length"`
-	Offset int         `json:"offset"`
-	Total  int64       `json:"total"`
-	Items  interface{} `json:"items"`
+	Size  int         `json:"size"`
+	Page  int         `json:"page"`
+	Total int64       `json:"total"`
+	Items interface{} `json:"items"`
 }

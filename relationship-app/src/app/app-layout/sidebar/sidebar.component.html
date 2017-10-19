@@ -1,0 +1,3 @@
+<mat-nav-list>
+  <a mat-list-item *ngFor="let universe of universes" routerLink="/universes/{{universe.Properties.hash}}">{{universe.Properties.name}}</a>
+</mat-nav-list>

@@ -1,5 +1,5 @@
 export interface Universe {
-  id: string;
+  hash: string;
   name: string;
 }
 
