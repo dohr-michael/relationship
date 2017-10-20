@@ -1,5 +1,5 @@
 import { Component, ComponentFactoryResolver, Input, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component( {
   selector: 'app-navbar',
@@ -10,12 +10,22 @@ export class NavbarComponent implements OnInit {
   @ViewChild( 'toolbar', { read: ViewContainerRef } )
   toolbar: ViewContainerRef;
   @Input()
-  onNavClick: () => void;
+  onNavClick?: () => void;
   @Input()
   title: string;
 
-  constructor( private route: ActivatedRoute,
+  constructor( private router: Router,
+               private route: ActivatedRoute,
                private _componentFactoryResolver: ComponentFactoryResolver ) {}
+
+
+  navClick = () => {
+    if( this.onNavClick ) {
+      this.onNavClick();
+    } else {
+      this.router.navigate( [ '/' ] );
+    }
+  }
 
   ngOnInit() {
     this.route.data.subscribe( data => {

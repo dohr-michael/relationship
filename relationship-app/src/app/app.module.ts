@@ -11,12 +11,14 @@ import { services, modules } from './shared';
 import { ApiInterceptor } from './interceptors';
 
 import * as home from './home';
+import * as universe from './universe';
 
 import 'rxjs/Rx';
 
 
 const routes: Routes = [
   { path: 'home', component: home.Page, data: { toolbar: null } },
+  { path: 'universes/:id', component: universe.Page, data: { toolbar: universe.Toolbar } },
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: '**', component: home.Page, data: { toolbar: null } }, // TODO Not Found
 ];
@@ -26,6 +28,7 @@ const routes: Routes = [
     AppComponent,
     ...layout.Components,
     ...home.Components,
+    ...universe.Components,
   ],
   imports: [
     HttpClientModule,
